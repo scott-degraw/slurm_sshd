@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+*.out
+*.err
+.vscode/
+.claude/settings.local.json
+.claude/.cc-writes/
+
+# Captured job log from a real run (contains cluster username and hostnames)
+job_output.txt
