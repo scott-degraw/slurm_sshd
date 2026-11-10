@@ -43,6 +43,8 @@ Run the `connect.sh` script with a unique job name and your submission node logi
 | :--------- | :----------------------------------------------- |
 | `-p <PORT>`| Specify the local port for the tunnel (default: random) |
 | `-c`       | Automatically connect via SSH when ready         |
+| `-v`       | Open a VSCode window connected to the job when ready |
+| `-d <DIR>` | Absolute path on the execution node for VSCode to open (implies `-v`) |
 | `-f <FILE>`| Specify a custom Slurm submit file (default: job.slurm) |
 | `-h`       | Show help message                                |
 
@@ -54,11 +56,22 @@ Connect to `login.example.com`, use local port `8888`, and auto-connect:
 ./connect.sh -p 8888 -c my-dev-session scott@login.example.com
 ```
 
+### Opening VSCode Automatically
+
+`-v` runs `code --remote ssh-remote+slurm-job-<job-name>` once the tunnel is up. This needs:
+
+- The `code` command in your PATH (in VSCode: *Shell Command: Install 'code' command in PATH*).
+- `Include config.d/*` near the top of `~/.ssh/config`, so the generated host entry in `~/.ssh/config.d/slurm-jobs` resolves.
+
+```bash
+./connect.sh -d /home/scott/project my-dev-session scott@login.example.com
+```
+
 ## How it Works
 
 1.  **Job Check**: The script checks if a Slurm job with the specified name matches your input using `squeue`.
 2.  **Submission**:
-    - If no job runs, it creates a directory `slurm_ssh_job_<job-name>` on the remote host.
+    - If no job runs, it creates a directory `~/slurm_ssh_job/<job-name>` on the remote host.
     - Uploads `job.slurm`, `entrypoint.sh`, and your local public key (`~/.ssh/id_*.pub`).
     - Submits the job via `sbatch`.
 3.  **Startup**: The job runs `entrypoint.sh`, which generates host keys, starts `sshd` on a random port, and outputs connection details.
@@ -70,4 +83,4 @@ Connect to `login.example.com`, use local port `8888`, and auto-connect:
 ## Troubleshooting
 
 -   **"No public key found"**: Ensure you have an SSH key pair (`ssh-keygen -t ed25519`).
--   **"Error: Could not determine internal Job Host"**: This implies the Slurm job crashed or failed to write output. Check `job.err` and `job.out` in the `slurm_ssh_job_<name>` directory on the login node.
+-   **"Error: Could not determine internal Job Host"**: This implies the Slurm job crashed or failed to write output. Check `job.err` and `job.out` in the `~/slurm_ssh_job/<job-name>` directory on the login node.
